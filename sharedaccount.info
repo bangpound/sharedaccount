@@ -1,0 +1,4 @@
+name = Shared Account
+description = Adds new permission for users to edit their own account.
+core = 7.x
+files[] = sharedaccount.test

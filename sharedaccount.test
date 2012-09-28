@@ -1,0 +1,103 @@
+<?php
+
+/**
+ * Tests editing a user account.
+ */
+class SharedAccountUserEditTestCase extends DrupalWebTestCase {
+
+  function setUp() {
+    parent::setUp('sharedaccount');
+  }
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Shared account user edit',
+      'description' => 'Test Shared account user edit page.',
+      'group' => 'Shared Account',
+    );
+  }
+
+  function testUserEdit() {
+    $adminUser = $this->drupalCreateUser(array('administer users'));
+    $normalUser = $this->drupalCreateUser(array('edit own account'));
+    $sharedUser = $this->drupalCreateUser();
+
+    $this->drupalLogin($adminUser);
+
+    // Test that an admin user can edit his own email address.
+    $edit = array();
+    $edit['mail'] = $this->randomName() . '@new.example.com';
+    $edit['current_pass'] = $adminUser->pass_raw;
+    $this->drupalPost("user/$adminUser->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("The changes have been saved."));
+
+    // Test that an admin user can edit another user's email address.
+    $edit = array();
+    $edit['mail'] = $this->randomName() . '@new.example.com';
+    $this->drupalPost("user/$normalUser->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("The changes have been saved."));
+
+    // Test that an admin user can edit the shared user's email address.
+    $edit = array();
+    $edit['mail'] = $this->randomName() . '@new.example.com';
+    $this->drupalPost("user/$sharedUser->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("The changes have been saved."));
+
+    $this->drupalLogout();
+
+
+
+    $this->drupalLogin($normalUser);
+
+    // Test that a normal user cannot edit the admin's account.
+    $this->drupalGet("user/$adminUser->uid/edit");
+    $this->assertResponse(403);
+
+    // Test that an normal user can edit his own email address.
+    $edit = array();
+    $edit['mail'] = $this->randomName() . '@new.example.com';
+    $edit['current_pass'] = $normalUser->pass_raw;
+    $this->drupalPost("user/$normalUser->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("The changes have been saved."));
+
+    // Test that a normal user cannot edit the shared user account.
+    $this->drupalGet("user/$sharedUser->uid/edit");
+    $this->assertResponse(403);
+
+    $this->drupalLogout();
+
+
+
+    $this->drupalLogin($sharedUser);
+
+    // Test that a shared user cannot edit the admin's account.
+    $this->drupalGet("user/$adminUser->uid/edit");
+    $this->assertResponse(403);
+
+    // Test that an shared user can edit his own email address.
+    $this->drupalGet("user/$normalUser->uid/edit");
+    $this->assertResponse(403);
+
+    // Test that a shared user cannot edit the shared user account.
+    $this->drupalGet("user/$sharedUser->uid/edit");
+    $this->assertResponse(403);
+
+    $this->drupalLogout();
+
+    // Test that a anonymous user cannot edit the user 0 account.
+    $this->drupalGet("user/0/edit");
+    $this->assertResponse(403);
+
+    // Test that a anonymous user cannot edit the admin user account.
+    $this->drupalGet("user/$adminUser->uid/edit");
+    $this->assertResponse(403);
+
+    // Test that a anonymous user cannot edit the normal user account.
+    $this->drupalGet("user/$normalUser->uid/edit");
+    $this->assertResponse(403);
+
+    // Test that a anonymous user cannot edit the shared user account.
+    $this->drupalGet("user/$sharedUser->uid/edit");
+    $this->assertResponse(403);
+  }
+}

@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * Implement hook_menu_alter().
+ *
+ * Substitutes this module's callback for any user edit access callback.
+ */
+function sharedaccount_menu_alter(&$items) {
+  foreach ($items as &$item) {
+    if (isset($item['access callback']) && $item['access callback'] === 'user_edit_access') {
+      $item['access callback'] = 'sharedaccount_edit_access';
+    }
+  }
+}
+
+/**
+ * Implement hook_permission().
+ *
+ * Defines permission for users to edit their own account. Most users probably need this
+ * permission.
+ */
+function sharedaccount_permission() {
+  return array(
+    'edit own account' => array(
+      'title' => t('Edit own account'),
+      'description' => t('Edit the user\'s own account.'),
+    ),
+  );
+}
+
+/**
+ * Access callback checks user's permission to edit own account.
+ */
+function sharedaccount_edit_access($account) {
+  if ($GLOBALS['user']->uid == $account->uid) {
+    return user_access('edit own account') || user_access('administer users');
+  }
+  else {
+    return user_edit_access($account);
+  }
+}
