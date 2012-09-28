@@ -32,7 +32,7 @@ function sharedaccount_permission() {
  * Access callback checks user's permission to edit own account.
  */
 function sharedaccount_edit_access($account) {
-  if ($GLOBALS['user']->uid == $account->uid) {
+  if (($GLOBALS['user']->uid == $account->uid) && $account->uid > 0) {
     return user_access('edit own account') || user_access('administer users');
   }
   else {

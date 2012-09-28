@@ -22,6 +22,8 @@ class SharedAccountUserEditTestCase extends DrupalWebTestCase {
     $normalUser = $this->drupalCreateUser(array('edit own account'));
     $sharedUser = $this->drupalCreateUser();
 
+
+    // Test of administer user permission.
     $this->drupalLogin($adminUser);
 
     // Test that an admin user can edit his own email address.
@@ -43,10 +45,14 @@ class SharedAccountUserEditTestCase extends DrupalWebTestCase {
     $this->drupalPost("user/$sharedUser->uid/edit", $edit, t('Save'));
     $this->assertRaw(t("The changes have been saved."));
 
+    // Test that a admin user cannot edit the user 0 account.
+    $this->drupalGet("user/0/edit");
+    $this->assertResponse(403);
+
     $this->drupalLogout();
 
 
-
+    // Test of edit own account permission.
     $this->drupalLogin($normalUser);
 
     // Test that a normal user cannot edit the admin's account.
@@ -64,10 +70,14 @@ class SharedAccountUserEditTestCase extends DrupalWebTestCase {
     $this->drupalGet("user/$sharedUser->uid/edit");
     $this->assertResponse(403);
 
+    // Test that a normal user cannot edit the user 0 account.
+    $this->drupalGet("user/0/edit");
+    $this->assertResponse(403);
+
     $this->drupalLogout();
 
 
-
+    // Test without edit own account permission.
     $this->drupalLogin($sharedUser);
 
     // Test that a shared user cannot edit the admin's account.
@@ -82,7 +92,14 @@ class SharedAccountUserEditTestCase extends DrupalWebTestCase {
     $this->drupalGet("user/$sharedUser->uid/edit");
     $this->assertResponse(403);
 
+    // Test that a shared user cannot edit the user 0 account.
+    $this->drupalGet("user/0/edit");
+    $this->assertResponse(403);
+
     $this->drupalLogout();
+
+
+    // Test of anonymous user permissions.
 
     // Test that a anonymous user cannot edit the user 0 account.
     $this->drupalGet("user/0/edit");
@@ -98,6 +115,13 @@ class SharedAccountUserEditTestCase extends DrupalWebTestCase {
 
     // Test that a anonymous user cannot edit the shared user account.
     $this->drupalGet("user/$sharedUser->uid/edit");
+    $this->assertResponse(403);
+
+    // Test that a anonymous user cannot edit the user 0 account.
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array(
+      'edit own account',
+    ));
+    $this->drupalGet("user/0/edit");
     $this->assertResponse(403);
   }
 }
